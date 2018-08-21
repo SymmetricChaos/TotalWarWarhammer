@@ -33,28 +33,3 @@ plt.xticks(x_ticks)
 #plt.yticks(y_ticks)
 plt.show()
 
-
-
-attack_file  = open('MAList.txt', 'r')
-MAL = [int(i) for i in attack_file.readlines()]
-
-defense_file  = open('MDList.txt', 'r')
-MDL = [int(i) for i in defense_file.readlines()]
-
-x_ticks = [i*5 for i in range(0,20)]
-
-fig = plt.figure()
-fig.set_size_inches(14, 7)
-plt.hist(MAL,bins=np.arange(0,100,5))
-plt.xticks(x_ticks)
-plt.yticks([], [])
-plt.title("Melee Attack")
-
-plt.show()
-
-fig = plt.figure()
-fig.set_size_inches(14, 7)
-plt.hist(MDL,bins=np.arange(0,100,5))
-plt.yticks([], [])
-plt.xticks(x_ticks)
-plt.title("Melee Defense")

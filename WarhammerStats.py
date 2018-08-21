@@ -1,61 +1,53 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import linregress
+import matplotlib.patches as ptch
 
-stat_file = open('WarhammerUnitStats.csv', 'r')
+units = np.load('unitsDictionary.npy').item()
 
-armor, charge, meleeA, meleeD, morale = [],[],[],[],[]
-
-for i,line in enumerate(stat_file):
-    if i > 0: 
-        a,b,c,d,e = line.split("\t")
-        armor.append(int(a))
-        charge.append(int(b))
-        meleeA.append(int(c))
-        meleeD.append(int(d))
-        morale.append(int(e))
-
-meleeA = np.array(meleeA)
-charge = np.array(charge)
-meleeD = np.array(meleeD)
-armor  = np.array(armor)
-morale = np.array(morale)
-
-percentiles = [20,50,80]
-
-fig = plt.figure()
-fig.set_size_inches(12, 6)
-x_ticks = [i*10 for i in range(0,21)]
-plt.hist(armor,bins=np.arange(0,210,10))
-plt.xticks(x_ticks)
-plt.title("Armor Distribution\nWith 20th, 50th, 80th Percentiles",size=20)
-for x in np.percentile(armor,percentiles):
-    plt.axvline(x,color='black',linewidth=4)
-#plt.yticks([])
-plt.show()
+def histoplot(L,bins,x_ticks,size=[13,6],title=""):
+    
+    
+    fig = plt.figure()
+    fig.set_size_inches(size[0], size[1])
+    plt.hist(L,bins=bins)
+    plt.xticks(x_ticks)
+    plt.title(title,size=20)
+    percentiles = np.percentile(L,[20,50,80])
+    for x in percentiles:
+        plt.axvline(x,color='black',linewidth=3)
+    percentile_legend = []
+    for i,j in zip(['20','50','80'],percentiles):
+         percentile_legend.append("{}th Percentile: {:.1f}".format(i,j))
+    plt.legend(percentile_legend)
+    plt.show()
 
 
-
-fig = plt.figure()
-fig.set_size_inches(12, 6)
-x_ticks = [i*5 for i in range(0,21)]
-plt.hist(meleeA,bins=np.arange(0,105,5))
-plt.xticks(x_ticks)
-plt.title("Melee Attack Distribution\nWith 20th, 50th, 80th Percentiles",size=20)
-for x in np.percentile(meleeA,percentiles):
-    plt.axvline(x,color='black',linewidth=4)
-#plt.yticks([])
-plt.show()
+histoplot(units['armor'],np.arange(0,210,10),[i*10 for i in range(0,21)],[13,6],
+          "Armor Distribution\nWith 20th, 50th, 80th Percentiles")
 
 
+histoplot(units['melee_A'],np.arange(0,105,5),[i*5 for i in range(0,21)],[13,6],
+          "Melee Attack Distribution\nWith 20th, 50th, 80th Percentiles")
 
-fig = plt.figure()
-fig.set_size_inches(12, 6)
-x_ticks = [i*5 for i in range(0,21)]
-plt.hist(meleeD,bins=np.arange(0,105,5))
-plt.xticks(x_ticks)
-plt.title("Melee Defense Distribution\nWith 20th, 50th, 80th Percentiles",size=20)
-for x in np.percentile(meleeD,percentiles):
-    plt.axvline(x,color='black',linewidth=4)
-#plt.yticks([])
-plt.show()
+histoplot(units['melee_D'],np.arange(0,105,5),[i*5 for i in range(0,21)],[13,6],
+          "Melee Defense Distribution\nWith 20th, 50th, 80th Percentiles")
+
+histoplot(units['total_damage'],np.arange(0,600,20),[i*20 for i in range(0,31)],[13,6],
+          "Total Damage Distribution\nWith 20th, 50th, 80th Percentiles")
+
+
+L = []
+for dam,cla in zip(units['total_damage'],units['class']):
+    if cla != 'com':
+        L.append(dam)
+
+histoplot(L,np.arange(0,600,20),[i*20 for i in range(0,31)],[13,6],
+          "Total Damage Distribution (No Lords or Heroes)\nWith 20th, 50th, 80th Percentiles")
+
+histoplot(units['ap_fraction'],np.linspace(0,1,21),np.linspace(0,1,21),[13,6],
+          "AP Fraction Distribution\nWith 20th, 50th, 80th Percentiles")
+
+
+
+
+    

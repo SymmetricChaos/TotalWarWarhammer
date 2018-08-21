@@ -32,16 +32,16 @@ plt.show()
 fig = plt.figure()
 fig.set_size_inches(16, 8)
 for ap in ap_fraction:
-    y = (1-ap)*non_ap_blocked[:126]
+    y = (1-ap)*non_ap_blocked[:121]
     hp_mult = 1/(1-y/100)
-    plt.plot(armor[:126],hp_mult)
+    plt.plot(armor[:121],hp_mult)
 
-    plt.annotate("{:.1f}".format(hp_mult[-1]),(126,hp_mult[-1]))
+    plt.annotate("{:.1f}".format(hp_mult[-1]),(121,hp_mult[-1]))
     
 plt.xlabel("Armor")
 plt.ylabel("Effective HP Multiplier")
 plt.grid()
 plt.legend(legend_labels)
 plt.xticks(x_ticks[:13])
-plt.title("HP Multiplier from Armor (0 to 125)",size=20)
+plt.title("HP Multiplier from Armor (0 to 120)",size=20)
 plt.show()
