@@ -24,28 +24,25 @@ def read_index(n):
     for stat,val in units.items():
         print("{:<15}: {}".format(stat,val[n]))
 
-eternal_guard = units['name'].index("wh_dlc05_wef_inf_eternal_guard_0")
-crypt_ghouls = units['name'].index("wh_main_vmp_inf_crypt_ghouls")
+unit1 = units['key_name'].index("wh_main_chs_inf_chosen_1")
+unit2 = units['key_name'].index("wh_main_chs_inf_chosen_0")
 
-read_index(eternal_guard)
+read_index(unit1)
 print("\n")
-read_index(crypt_ghouls)
+read_index(unit2)
 
-print("\n\n")
-print("Eternal Guard",average_damage(80,4,20,26,30))
-print("Crypt Ghouls ",average_damage(80,36,4,27,30))
 
-EG = []
-CG = []
+U1 = []
+U2 = []
 for i in range(0,201):
-    EG.append(average_damage(i,4,20,26,MD=32))
-    CG.append(average_damage(i,36,4,27,MD=32))
+    U1.append(average_damage(i,units['damage'][unit1],units['ap_damage'][unit1],units['melee_A'][unit1],MD=32))
+    U2.append(average_damage(i,units['damage'][unit2],units['ap_damage'][unit2],units['melee_A'][unit2],MD=32))
 
 plt.figure()
 plt.gcf().set_size_inches(12, 6)
-plt.plot(EG)
-plt.plot(CG)
-plt.legend(["Eternal Guard","Crypt Ghouls"])
+plt.plot(U1)
+plt.plot(U2)
+plt.legend([units['name'][unit1],units['name'][unit2]])
 plt.ylabel("Average Damage")
 plt.xlabel("Armor")
 plt.xticks(np.arange(0,210,10))
