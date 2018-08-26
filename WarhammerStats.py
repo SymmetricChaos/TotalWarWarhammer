@@ -1,8 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as ptch
+import pickle
 
-units = np.load('unitsDictionary.npy').item()
+units = pickle.load( open( "unitsDict.p", "rb" ) )
+
 
 def histoplot(L,bins,x_ticks,size=[13,6],title=""):
     

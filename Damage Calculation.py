@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
-
-units = np.load('unitsDictionary.npy').item()
+units = pickle.load( open( "unitsDict.p", "rb" ) )
 
 def hit_prob(A,D):
     r = 35+A-D
