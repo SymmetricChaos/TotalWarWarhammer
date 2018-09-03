@@ -16,15 +16,19 @@ import pickle
 #for i,l in enumerate(linecache.getline("Melee_Weapons_Tables.csv",3).split("\t")):
 #    print(i,l)
     
-#for i,l in enumerate(linecache.getline("Main_Units_Tables.csv",3).split("\t")):
+for i,l in enumerate(linecache.getline("Main_Units_Tables.csv",3).split("\t")):
+    print(i,l)
+
+#for i,l in enumerate(linecache.getline("Battle_Entities_Tables.csv",3).split("\t")):
 #    print(i,l)
-    
 
 ## Open the files to read them.
 stat_file = open('Land_Units_Tables.csv', 'r')
 weapon_file = open('Melee_Weapons_Tables.csv', 'r')
 names_file = open('OnscreenNames.csv', 'r')
 main_units_file = open('Main_Units_Tables.csv', 'r')
+battle_entities_file = open('Battle_Entities_Tables.csv', 'r')
+mounts_tables_file = open('Mounts_Tables.csv', 'r')
 
 ## To start with we will take the information from Melee_Weapons_Tables and place
 ## it into a dictionary. The name of each key will be the name of the weapon. This
@@ -54,13 +58,26 @@ for i,line in enumerate(main_units_file):
     if i > 2:
         L = line.split("\t")
         if "_shp_" not in L[17]:
-            main[L[5]] = [L[2],L[6],L[19]]
+            main[L[5]] = [L[2],L[6],L[19],L[8]]
+            
+entities = dict()
+for i,line in enumerate(battle_entities_file):
+    if i > 2:
+        L = line.split("\t")
+        entities[L[0]] = L[17]
+        
+mounts = dict()
+for i,line in enumerate(mounts_tables_file):
+    if i > 2:
+        L = line.split("\t")
+        entities[L[0]] = L[2]
         
      
 ## Prepare a dictionary to hold the information we want about each unit.
 traits = ['name','key_name','charge','armor','category','class','melee_A','melee_D',
           'BVL','BVI','damage','ap_damage','total_damage','ap_fraction',
-          'attack_interval','faction','caste','models','weight_class','melee_weapon']
+          'attack_interval','faction','caste','models','weight_class','melee_weapon',
+          'leadership','missile_weapon','MP_cost']
 units = dict()
 for t in traits:
     units[t] = []
@@ -85,12 +102,32 @@ for i,line in enumerate(stat_file):
         units['charge'].append(int(L[4]))
         units['melee_A'].append(int(L[12]))
         units['melee_D'].append(int(L[13]))
+        units['leadership'].append(int(L[14]))
+
+        ## Calculuating HP turns out to be really hard.
+        #num_mounts = int(L[19])
+        #num_engines = int(L[51])
+        #if L[16] == "":
+        #    mount_hp = 0
+        #else:
+        #    mount_hp = entities[mounts[L[16]]]
+        #if L[31] == "":
+        #    engine_hp = 0
+        #else:
+        #    engine_hp = entities[mounts[L[31]]]  
+        
+        #if "settra" in L[9]:
+        #    print(L[19],L[51])
+        #    print(L[16],"  ",L[31])
+        #    print(mount_hp," ",engine_hp)
+            
         
         # These stats are best stored as strings so no change is needed.
         units['category'].append(L[3])
         units['class'].append(L[5])
         units['key_name'].append(L[9])
         units['melee_weapon'].append(L[20])
+        units['missile_weapon'].append(L[21])
         
         # Now we make use of the keyname to link to information in other
         # dictionaries we created.
@@ -98,8 +135,10 @@ for i,line in enumerate(stat_file):
         
         additional = main[L[9]]
         units['caste'].append(additional[0])
-        units['models'].append(additional[1])
+        # Models are converted to the standard 75% large size
+        units['models'].append(int(np.ceil(float(additional[1])*.75)))
         units['weight_class'].append(additional[2])
+        units['MP_cost'].append(int(additional[3]))
 
         # Finally we can use the keyname to get the faction that the unit belongs
         # to
@@ -115,6 +154,7 @@ for i,line in enumerate(stat_file):
         units['ap_damage'].append(int(weap[3]))
         units['total_damage'].append(int(weap[2])+int(weap[3]))
         units['ap_fraction'].append( int(weap[3]) / (int(weap[2])+int(weap[3])))
+        
         # Attack interval is at the end of a line so we need to remove the
         # newline marker and then convert to a floating point number
         units['attack_interval'].append(float(re.sub("\n","",weap[4])))
@@ -122,10 +162,12 @@ for i,line in enumerate(stat_file):
         
 
 unitsDF = pd.DataFrame(units)
+pd.set_option('display.max_columns', 500)
+#for i in ['caste','category','class','faction']:
+#    print("{}: {}\n".format(i,unitsDF[i].unique()))
+
 #print(unitsDF.columns.tolist())
 pickle.dump(unitsDF, open( "unitsDF.p", "wb" ) )
 pickle.dump(units, open( "unitsDict.p", "wb" ) )
 
-#print(unitsDF.loc[unitsDF['class']=='cav_shk'])
-#print(unitsDF.loc[unitsDF['name'].str.contains('tmb')]['name'])
-print(unitsDF.loc[unitsDF['key_name'].str.contains('_chosen')])
+print(unitsDF.loc[unitsDF['key_name'].str.contains('_orion')])
