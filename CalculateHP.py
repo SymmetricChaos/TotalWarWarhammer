@@ -9,7 +9,7 @@ function unitHealth(data) {
 
   // Each engine receives the number of mounts specified (i.e. chariots)
   let mount_count = engine_count > 0 ? lu.num_mounts * engine_count : lu.num_mounts;
-  let mount_hp = mount_count > 0 && lu.mount !== null ? lu.mount.battle_entity.hit_points : 0;
+  let = mount_count > 0 && lu.mount !== null ? lu.mount.battle_entity.hit_points : 0;
 
   let unit_count = data.num_men;
   let unit_hp = lu.battle_entity.hit_points;
@@ -40,4 +40,4 @@ function unitHealth(data) {
 };
       
       
-engine_count
+(unit_count * unit_hp + mount_count * mount_hp + engine_count * engine_hp) * unitSizeMultiplier[globalSettings().unit_size]

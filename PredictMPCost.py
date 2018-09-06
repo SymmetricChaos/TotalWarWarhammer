@@ -13,8 +13,9 @@ mod = linear_model.LinearRegression()
 
 MP_cost = unitswithcost['MP_cost'].values.reshape(-1,1)
 
+factors = ['melee_A','melee_D','leadership','damage','ap_damage','armor','charge']
 X = []
-for i in ['melee_A','melee_D','leadership','damage','ap_damage','armor','charge']:
+for i in factors:
     X.append(unitswithcost[i].values)
 
 X = np.array(X).T
@@ -25,9 +26,11 @@ mod.fit(X,MP_cost)
 
 predicted_MP_cost = mod.predict(X)
 
-print(mod.coef_)
-print(mean_squared_error(MP_cost, predicted_MP_cost))
-print(r2_score(MP_cost, predicted_MP_cost))
+for i,j in zip(factors,mod.coef_[0]):
+    print("{:<10}: {:.3f}".format(i,j))
+#print("Coeficients:" mod.coef_)
+print("\nMean Squared Error: {:.3f}".format(mean_squared_error(MP_cost, predicted_MP_cost)))
+print("\nR Squared: {:.3f}".format(r2_score(MP_cost, predicted_MP_cost)))
 
 #plt.scatter(leadership,MP_cost)
 #plt.plot(leadership,predicted_MP_cost,

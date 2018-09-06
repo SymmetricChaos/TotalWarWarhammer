@@ -1,6 +1,5 @@
-## Here we are taking the raw data from te Land_Units_Tables and Melee_Weapons+Tables
-## and saving it into a Python dictionary in a usable form. Only traits we actally
-## care about will be put in.
+## Here we are taking the raw data from the various tables and converting it
+## into a useful form.
 
 import numpy as np
 import re
@@ -10,17 +9,23 @@ import pickle
 
 ## For convenience the linecache library allows us to quickly see a list of
 ## what traits there are and what their index is.
-#for i,l in enumerate(linecache.getline("Land_Units_Tables.csv",3).split("\t")):
-#    print(i,l)
+for i,l in enumerate(linecache.getline("Land_Units_Tables.csv",3).split("\t")):
+    print(i,l)
     
-#for i,l in enumerate(linecache.getline("Melee_Weapons_Tables.csv",3).split("\t")):
-#    print(i,l)
+for i,l in enumerate(linecache.getline("Melee_Weapons_Tables.csv",3).split("\t")):
+    print(i,l)
     
 for i,l in enumerate(linecache.getline("Main_Units_Tables.csv",3).split("\t")):
     print(i,l)
 
-#for i,l in enumerate(linecache.getline("Battle_Entities_Tables.csv",3).split("\t")):
-#    print(i,l)
+for i,l in enumerate(linecache.getline("Battle_Entities_Tables.csv",3).split("\t")):
+    print(i,l)
+
+for i,l in enumerate(linecache.getline("Mounts_Tables.csv",3).split("\t")):
+    print(i,l)
+    
+for i,l in enumerate(linecache.getline("Battlefield_Engines_Tables.csv",3).split("\t")):
+    print(i,l)
 
 ## Open the files to read them.
 stat_file = open('Land_Units_Tables.csv', 'r')
@@ -29,6 +34,7 @@ names_file = open('OnscreenNames.csv', 'r')
 main_units_file = open('Main_Units_Tables.csv', 'r')
 battle_entities_file = open('Battle_Entities_Tables.csv', 'r')
 mounts_tables_file = open('Mounts_Tables.csv', 'r')
+engines_tables_file = open('Battlefield_Engines_Tables.csv', 'r')
 
 ## To start with we will take the information from Melee_Weapons_Tables and place
 ## it into a dictionary. The name of each key will be the name of the weapon. This
@@ -64,20 +70,30 @@ entities = dict()
 for i,line in enumerate(battle_entities_file):
     if i > 2:
         L = line.split("\t")
-        entities[L[0]] = L[17]
+        entities[L[0]] = [L[3],L[6],L[13],L[21],L[23],L[17]]
         
 mounts = dict()
 for i,line in enumerate(mounts_tables_file):
     if i > 2:
         L = line.split("\t")
-        entities[L[0]] = L[2]
+        mounts[L[0]] = L[2]
         
-     
+engines = dict()
+for i,line in enumerate(engines_tables_file):
+    if i > 2:
+        L = line.split("\t")
+        engines[L[4]] = L[7]
+
+missile_weapons = pickle.load( open( "missileWeaponsDict.p", "rb" ) )
+
+
 ## Prepare a dictionary to hold the information we want about each unit.
 traits = ['name','key_name','charge','armor','category','class','melee_A','melee_D',
           'BVL','BVI','damage','ap_damage','total_damage','ap_fraction',
           'attack_interval','faction','caste','models','weight_class','melee_weapon',
-          'leadership','missile_weapon','MP_cost']
+          'leadership','missile_weapon','MP_cost','missile_damage','missile_ap_damage',
+          'missile_total_damage','missile_projectiles','missile_shots_per_volley',
+          'ground_speed','charge_speed','mass','fly_speed','shield','HP']
 units = dict()
 for t in traits:
     units[t] = []
@@ -104,24 +120,6 @@ for i,line in enumerate(stat_file):
         units['melee_D'].append(int(L[13]))
         units['leadership'].append(int(L[14]))
 
-        ## Calculuating HP turns out to be really hard.
-        #num_mounts = int(L[19])
-        #num_engines = int(L[51])
-        #if L[16] == "":
-        #    mount_hp = 0
-        #else:
-        #    mount_hp = entities[mounts[L[16]]]
-        #if L[31] == "":
-        #    engine_hp = 0
-        #else:
-        #    engine_hp = entities[mounts[L[31]]]  
-        
-        #if "settra" in L[9]:
-        #    print(L[19],L[51])
-        #    print(L[16],"  ",L[31])
-        #    print(mount_hp," ",engine_hp)
-            
-        
         # These stats are best stored as strings so no change is needed.
         units['category'].append(L[3])
         units['class'].append(L[5])
@@ -129,10 +127,57 @@ for i,line in enumerate(stat_file):
         units['melee_weapon'].append(L[20])
         units['missile_weapon'].append(L[21])
         
-        # Now we make use of the keyname to link to information in other
-        # dictionaries we created.
+        #To get the shield we check if it exists then grab the fourth section
+        if L[23] == "none":
+            units['shield'].append(0)
+        else:
+            units['shield'].append(L[23].split("_")[3])
+        
+        # To get the faction we grab the third part of the keyname
+        units['faction'].append(L[9].split("_")[2])
+        
+        
+        # Calculating HP is a bit wild!
+        # The bonus hit points stat
+        bonus = int(L[15])
+        n_engines = int(L[51])
+        n_mounts = int(L[19]) * max(1,n_engines)
+        n_men = int(main[L[9]][1])
+        # The unit, its mounts, and engines each have a certain amount of HP
+        # which we get from the battle entities table.
+        unitHP = int(entities[L[11]][5])
+        engineHP = 0
+        mountHP = 0
+        if L[31] != '':
+            engineHP = int(entities[engines[L[31]]][5])
+        if L[16] != '':
+            mountHP = int(entities[mounts[L[16]]][5])
+        
+        
+        if n_engines > 0:
+            engineHP += bonus
+            if n_mounts > 0:
+                engineHP += 1
+            elif n_men > 0 and n_engines > 1:
+                unitHP += bonus
+        elif n_mounts > 1:
+            mountHP += bonus
+        else:
+            unitHP += bonus
+        
+        units['HP'].append(int((n_men * unitHP + n_mounts * mountHP + n_engines * engineHP) * .75))
+                
+                
+        
+        ### Now we make use of the keyname to link to information in other
+        ### dictionaries we created.
+        
+        
+        # This really ugly line gets the friendly name
         units['name'].append(names['"'+L[9]+'"'])
         
+        
+        ## The main_units_tables hold a bunch of information
         additional = main[L[9]]
         units['caste'].append(additional[0])
         # Models are converted to the standard 75% large size
@@ -140,10 +185,6 @@ for i,line in enumerate(stat_file):
         units['weight_class'].append(additional[2])
         units['MP_cost'].append(int(additional[3]))
 
-        # Finally we can use the keyname to get the faction that the unit belongs
-        # to
-        fct = L[9].split("_")
-        units['faction'].append(fct[2])
 
         # Now we match the unit's weapon type to the information we put into
         # the weapons dictionary we prepared earlier and put that data into it.
@@ -155,9 +196,53 @@ for i,line in enumerate(stat_file):
         units['total_damage'].append(int(weap[2])+int(weap[3]))
         units['ap_fraction'].append( int(weap[3]) / (int(weap[2])+int(weap[3])))
         
-        # Attack interval is at the end of a line so we need to remove the
-        # newline marker and then convert to a floating point number
+        # Attack interval is a not always a whole number so it needs to be
+        # in floating point. It is also at the end of the line so we need
+        # to remove the newline code.
         units['attack_interval'].append(float(re.sub("\n","",weap[4])))
+        
+        
+        if L[21] != '':
+            miss = missile_weapons[L[21]]
+            units['missile_damage'].append(miss[13])
+            units['missile_ap_damage'].append(miss[14])
+            units['missile_total_damage'].append(miss[13]+miss[14])
+            units['missile_projectiles'].append(miss[5])
+            units['missile_shots_per_volley'].append(miss[47])
+        else:
+            units['missile_damage'].append(0)
+            units['missile_ap_damage'].append(0)
+            units['missile_total_damage'].append(0)
+            units['missile_projectiles'].append(0)
+            units['missile_shots_per_volley'].append(0)
+        
+                
+        if L[31] != '':
+            eng = entities[engines[L[31]]]
+            units['ground_speed'].append(float(eng[0])*10)
+            units['charge_speed'].append(float(eng[1])*10)
+            units['mass'].append(int(eng[2]))
+            units['fly_speed'].append(float(eng[3])*10)
+        elif L[16] != '':
+            mnt = entities[mounts[L[16]]]
+            units['ground_speed'].append(float(mnt[0])*10)
+            units['charge_speed'].append(float(mnt[1])*10)
+            units['mass'].append(int(mnt[2]))
+            units['fly_speed'].append(float(mnt[3])*10)
+        else:
+            man = entities[L[11]]
+            units['ground_speed'].append(float(man[0])*10)
+            units['charge_speed'].append(float(man[1])*10)
+            units['mass'].append(int(man[2]))
+            units['fly_speed'].append(float(man[3])*10)
+            
+            
+
+            
+
+        
+        
+
         
         
 
@@ -170,4 +255,4 @@ pd.set_option('display.max_columns', 500)
 pickle.dump(unitsDF, open( "unitsDF.p", "wb" ) )
 pickle.dump(units, open( "unitsDict.p", "wb" ) )
 
-print(unitsDF.loc[unitsDF['key_name'].str.contains('_orion')])
+print(unitsDF.loc[unitsDF['key_name'].str.contains('boris')])
