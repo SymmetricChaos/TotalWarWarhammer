@@ -9,7 +9,7 @@ land_units_DF = pd.read_csv('Land_Units_Tables.csv',sep='\t',header=2)
 
 for i,l in enumerate(linecache.getline("Projectiles_Tables.csv",3).split("\t")):
     print(i,l)
-
+    
 missile_weapons = dict()
 for i in land_units_DF['primary_missile_weapon'].values:
     if type(i) == str:

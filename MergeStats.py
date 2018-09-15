@@ -93,7 +93,9 @@ traits = ['name','key_name','charge','armor','category','class','melee_A','melee
           'attack_interval','faction','caste','models','weight_class','melee_weapon',
           'leadership','missile_weapon','MP_cost','missile_damage','missile_ap_damage',
           'missile_total_damage','missile_projectiles','missile_shots_per_volley',
-          'ground_speed','charge_speed','mass','fly_speed','shield','HP']
+          'ground_speed','mass','fly_speed','shield','HP','missile_ap_fraction',
+          'missile_range','attributes','damage_mod_fire','damage_mod_magic',
+          'damage_mod_physical','damage_mod_missiles','damage_mod_all']
 units = dict()
 for t in traits:
     units[t] = []
@@ -119,6 +121,11 @@ for i,line in enumerate(stat_file):
         units['melee_A'].append(int(L[12]))
         units['melee_D'].append(int(L[13]))
         units['leadership'].append(int(L[14]))
+        units['damage_mod_fire'].append(int(L[49]))
+        units['damage_mod_magic'].append(int(L[50]))
+        units['damage_mod_physical'].append(int(L[52]))
+        units['damage_mod_missiles'].append(int(L[53]))
+        units['damage_mod_all'].append(int(L[54]))
 
         # These stats are best stored as strings so no change is needed.
         units['category'].append(L[3])
@@ -136,9 +143,9 @@ for i,line in enumerate(stat_file):
         # To get the faction we grab the third part of the keyname
         units['faction'].append(L[9].split("_")[2])
         
+        units['attributes'].append(L[36])
         
         # Calculating HP is a bit wild!
-        # The bonus hit points stat
         bonus = int(L[15])
         n_engines = int(L[51])
         n_mounts = int(L[19]) * max(1,n_engines)
@@ -152,7 +159,6 @@ for i,line in enumerate(stat_file):
             engineHP = int(entities[engines[L[31]]][5])
         if L[16] != '':
             mountHP = int(entities[mounts[L[16]]][5])
-        
         
         if n_engines > 0:
             engineHP += bonus
@@ -201,7 +207,6 @@ for i,line in enumerate(stat_file):
         # to remove the newline code.
         units['attack_interval'].append(float(re.sub("\n","",weap[4])))
         
-        
         if L[21] != '':
             miss = missile_weapons[L[21]]
             units['missile_damage'].append(miss[13])
@@ -209,42 +214,38 @@ for i,line in enumerate(stat_file):
             units['missile_total_damage'].append(miss[13]+miss[14])
             units['missile_projectiles'].append(miss[5])
             units['missile_shots_per_volley'].append(miss[47])
+            units['missile_ap_fraction'].append(miss[14]/(miss[13]+miss[14]))
+            units['missile_range'].append(miss[7])
+            #units['reload_time'].append(miss[18]*1/((int(L[39])+100)/100))
         else:
             units['missile_damage'].append(0)
             units['missile_ap_damage'].append(0)
             units['missile_total_damage'].append(0)
             units['missile_projectiles'].append(0)
             units['missile_shots_per_volley'].append(0)
+            units['missile_ap_fraction'].append(0)
+            units['missile_range'].append(0)
+            #units['reload_time'].append(0)
         
                 
         if L[31] != '':
             eng = entities[engines[L[31]]]
             units['ground_speed'].append(float(eng[0])*10)
-            units['charge_speed'].append(float(eng[1])*10)
             units['mass'].append(int(eng[2]))
             units['fly_speed'].append(float(eng[3])*10)
         elif L[16] != '':
             mnt = entities[mounts[L[16]]]
             units['ground_speed'].append(float(mnt[0])*10)
-            units['charge_speed'].append(float(mnt[1])*10)
             units['mass'].append(int(mnt[2]))
             units['fly_speed'].append(float(mnt[3])*10)
         else:
             man = entities[L[11]]
             units['ground_speed'].append(float(man[0])*10)
-            units['charge_speed'].append(float(man[1])*10)
             units['mass'].append(int(man[2]))
             units['fly_speed'].append(float(man[3])*10)
             
             
 
-            
-
-        
-        
-
-        
-        
 
 unitsDF = pd.DataFrame(units)
 pd.set_option('display.max_columns', 500)
@@ -254,5 +255,8 @@ pd.set_option('display.max_columns', 500)
 #print(unitsDF.columns.tolist())
 pickle.dump(unitsDF, open( "unitsDF.p", "wb" ) )
 pickle.dump(units, open( "unitsDict.p", "wb" ) )
+unitsDF.to_csv("units.csv")
 
-print(unitsDF.loc[unitsDF['key_name'].str.contains('boris')])
+print(unitsDF.loc[unitsDF['key_name'].str.contains('princess')])
+
+print(len(unitsDF.columns))

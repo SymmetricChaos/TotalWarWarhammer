@@ -10,7 +10,6 @@ def histoplot(L,bins,x_ticks,size=[13,6],title="",percentile_marks=True,stacked=
     fig = plt.figure()
     fig.set_size_inches(size[0], size[1])
     H = plt.hist(L,bins=bins,stacked=stacked)
-    print(H)
     plt.xticks(x_ticks)
     plt.title(title,size=20)
     if percentile_marks:
@@ -21,14 +20,16 @@ def histoplot(L,bins,x_ticks,size=[13,6],title="",percentile_marks=True,stacked=
             for i,j in zip(['20','50','80'],percentiles):
                 percentile_legend.append("{}th Percentile: {:.1f}".format(i,j))
         plt.legend(percentile_legend)
+        
+    return H
 
 
     
 unitsDF = pickle.load( open( "unitsDF.p", "rb" ) )
 
 L = unitsDF['ap_fraction'].values
-Lnap  = [i for i in L if i <= .5]
-Lap = [i for i in L if i > .5]
+Lnap  = [i for i in L if i < .5]
+Lap = [i for i in L if i >= .5]
 
 histoplot([Lap,Lnap],np.linspace(0,1,21),np.linspace(0,1,11),
           percentile_marks=False)
